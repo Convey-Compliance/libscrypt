@@ -13,23 +13,6 @@
 #define strtok_r(str, val, saveptr) strtok((str), (val))
 #endif
 
-/* pow() works with doubles. Sounds like it should cast to int correctly,
-* but doesn't always. This is faster anyway
-*/
-static uint16_t ipow(uint16_t base, uint32_t exp)
-{
-    uint16_t result = 1;
-    while (exp != 0)
-    {
-        if ((exp & 1) != 0)
-            result *= base;
-        exp >>= 1;
-        base *= base;
-    }
-
-    return result;
-}
-
 int libscrypt_check(char *mcf, const char *password)
 {
 	/* Return values:
@@ -81,7 +64,7 @@ int libscrypt_check(char *mcf, const char *password)
 	if (N > SCRYPT_SAFE_N)
 		return -1;
 
-	N = ipow(2, N);
+	N = (uint64_t)1 << N;
 
 	/* Useful debugging:
 	printf("We've obtained salt 'N' r p of '%s' %d %d %d\n", tok, N,r,p);
@@ -96,7 +79,7 @@ int libscrypt_check(char *mcf, const char *password)
             (uint32_t)retval, N, r, p, hashbuf, sizeof(hashbuf));
 
 	if (retval != 0)
-		return retval;
+		return -1;
 
 	retval = libscrypt_b64_encode((unsigned char*)hashbuf, sizeof(hashbuf), 
             outbuf, sizeof(outbuf));
